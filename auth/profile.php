@@ -4,9 +4,9 @@
  * Online Event Booking System
  */
 
-require_once '../config/config.php';
-require_once '../config/database.php';
-require_once '../includes/functions.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 // Redirect if not logged in
 requireLogin();

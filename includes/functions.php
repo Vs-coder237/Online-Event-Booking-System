@@ -4,8 +4,8 @@
  * Online Event Booking System
  */
 
-require_once '../config/config.php';
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/database.php';
 
 /**
  * Get all events with pagination and filters
@@ -496,13 +496,14 @@ function getPopularEvents($limit = 6) {
 }
 
 function emailExists($email) {
-    global $db;
+    global $pdo;
     $sql = "SELECT id FROM users WHERE email = :email LIMIT 1";
-    $stmt = $db->prepare($sql);
+    $stmt = $pdo->prepare($sql);
     $stmt->bindParam(':email', $email, PDO::PARAM_STR);
     $stmt->execute();
     return ($stmt->rowCount() > 0);
 }
+
 
 function registerUser($data) {
     global $db;
@@ -527,6 +528,61 @@ function registerUser($data) {
     } catch (PDOException $e) {
         return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
     }
+
+    function updateUserProfile($user_id, $data) {
+    global $db;
+
+    $query = "UPDATE users SET 
+                first_name = :first_name,
+                last_name = :last_name,
+                phone = :phone,
+                newsletter = :newsletter
+              WHERE id = :id";
+
+    $stmt = $db->prepare($query);
+
+    $success = $stmt->execute([
+        ':first_name' => $data['first_name'],
+        ':last_name' => $data['last_name'],
+        ':phone' => $data['phone'],
+        ':newsletter' => $data['newsletter'],
+        ':id' => $user_id
+    ]);
+
+    if ($success) {
+        return ['success' => true];
+    } else {
+        return ['success' => false, 'message' => 'Failed to update profile.'];
+    }
+}
+    function changeUserPassword($user_id, $current_password, $new_password) {
+    global $db;
+
+    // Fetch current hashed password from DB
+    $stmt = $db->prepare("SELECT password FROM users WHERE id = :id");
+    $stmt->execute([':id' => $user_id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$row || !password_verify($current_password, $row['password'])) {
+        return ['success' => false, 'message' => 'Current password is incorrect.'];
+    }
+
+    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+
+    $stmt = $db->prepare("UPDATE users SET password = :password WHERE id = :id");
+    $success = $stmt->execute([
+        ':password' => $hashed_password,
+        ':id' => $user_id
+    ]);
+
+    if ($success) {
+        return ['success' => true];
+    } else {
+        return ['success' => false, 'message' => 'Failed to change password.'];
+    }
+}
+
+
 }
 
 ?>

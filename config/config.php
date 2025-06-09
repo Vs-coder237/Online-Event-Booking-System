@@ -4,6 +4,8 @@
  * Online Event Booking System
  */
 
+require_once __DIR__ . '/database.php';
+
 // Start session if not already started
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -11,7 +13,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Site Configuration
 define('SITE_NAME', 'EventBooking Pro');
-define('SITE_URL', 'http://localhost/event-booking-system');
+define('SITE_URL', 'http://localhost/Online-Event-Booking-System');
 define('SITE_EMAIL', 'admin@eventbooking.com');
 
 // File Upload Configuration

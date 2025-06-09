@@ -45,5 +45,7 @@ class Database {
 
 // Create global database connection
 $database = new Database();
+// $db = $database->getConnection();
+
 $pdo = $database->getConnection();
 ?>

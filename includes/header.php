@@ -32,9 +32,6 @@ if (!isset($page_title)) {
     <meta name="author" content="<?php echo SITE_NAME; ?>">
 </head>
 <body>
-    <!-- Navigation -->
-    <?php include 'navbar.php'; ?>
-    
     <!-- Flash Messages -->
     <?php
     $flash = getFlashMessage();
