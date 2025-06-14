@@ -436,6 +436,8 @@ include 'includes/header.php';
     <div class="spinner"></div>
 </div>
 
+<?php include 'includes/navbar.php'; ?>
+
 <!-- Hero Section -->
 <section class="hero-section">
     <!-- Floating Particles -->

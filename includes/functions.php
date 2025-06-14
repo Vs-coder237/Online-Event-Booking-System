@@ -505,20 +505,22 @@ function emailExists($email) {
 }
 
 
+
 function registerUser($data) {
-    global $db;
+    global $pdo;
+
     $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
 
     try {
-        $sql = "INSERT INTO users (first_name, last_name, email, phone, password_hash, created_at)
-                VALUES (:first_name, :last_name, :email, :phone, :password_hash, NOW())";
-        $stmt = $db->prepare($sql);
+        $sql = "INSERT INTO users (first_name, last_name, email, phone, password, created_at)
+                VALUES (:first_name, :last_name, :email, :phone, :password, NOW())";
+        $stmt = $pdo->prepare($sql);
 
         $stmt->bindParam(':first_name', $data['first_name']);
         $stmt->bindParam(':last_name', $data['last_name']);
         $stmt->bindParam(':email', $data['email']);
         $stmt->bindParam(':phone', $data['phone']);
-        $stmt->bindParam(':password_hash', $passwordHash);
+        $stmt->bindParam(':password', $passwordHash);
 
         if ($stmt->execute()) {
             return ['success' => true];
@@ -528,24 +530,23 @@ function registerUser($data) {
     } catch (PDOException $e) {
         return ['success' => false, 'message' => 'Database error: ' . $e->getMessage()];
     }
+}
 
-    function updateUserProfile($user_id, $data) {
-    global $db;
+function updateUserProfile($user_id, $data) {
+    global $pdo;
 
     $query = "UPDATE users SET 
                 first_name = :first_name,
                 last_name = :last_name,
-                phone = :phone,
-                newsletter = :newsletter
+                phone = :phone
               WHERE id = :id";
 
-    $stmt = $db->prepare($query);
+    $stmt = $pdo->prepare($query);
 
     $success = $stmt->execute([
         ':first_name' => $data['first_name'],
         ':last_name' => $data['last_name'],
         ':phone' => $data['phone'],
-        ':newsletter' => $data['newsletter'],
         ':id' => $user_id
     ]);
 
@@ -555,11 +556,12 @@ function registerUser($data) {
         return ['success' => false, 'message' => 'Failed to update profile.'];
     }
 }
-    function changeUserPassword($user_id, $current_password, $new_password) {
-    global $db;
+
+function changeUserPassword($user_id, $current_password, $new_password) {
+    global $pdo;
 
     // Fetch current hashed password from DB
-    $stmt = $db->prepare("SELECT password FROM users WHERE id = :id");
+    $stmt = $pdo->prepare("SELECT password FROM users WHERE id = :id");
     $stmt->execute([':id' => $user_id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -569,7 +571,7 @@ function registerUser($data) {
 
     $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
 
-    $stmt = $db->prepare("UPDATE users SET password = :password WHERE id = :id");
+    $stmt = $pdo->prepare("UPDATE users SET password = :password WHERE id = :id");
     $success = $stmt->execute([
         ':password' => $hashed_password,
         ':id' => $user_id
@@ -582,7 +584,5 @@ function registerUser($data) {
     }
 }
 
-
-}
 
 ?>

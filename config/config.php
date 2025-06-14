@@ -145,21 +145,34 @@ function requireAdminLogin() {
 function LoginUser($email, $password) {
     global $pdo;
 
-    // Prepare query
-    $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->execute([$email]);
-    $user = $stmt->fetch();
+    try {
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
 
-    if ($user && password_verify($password, $user['password'])) {
-        // Password is correct, set session variables
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['user_name'] = $user['name'];
-        return true;
+        if ($user && password_verify($password, $user['password'])) {
+            // Password is correct, set session variables
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name']; // Combine first & last name
+
+            return [
+                'success' => true,
+                'user' => $user
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Invalid email or password.'
+            ];
+        }
+    } catch (PDOException $e) {
+        return [
+            'success' => false,
+            'message' => 'Database error: ' . $e->getMessage()
+        ];
     }
-
-    // Login failed
-    return false;
 }
+
 
 
 /**
