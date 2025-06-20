@@ -155,6 +155,10 @@ function LoginUser($email, $password) {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name']; // Combine first & last name
 
+
+            $_SESSION['first_name'] = $user['first_name'];
+            $_SESSION['last_name'] = $user['last_name'];
+
             return [
                 'success' => true,
                 'user' => $user

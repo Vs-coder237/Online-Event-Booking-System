@@ -1,11 +1,19 @@
 <?php
 /**
  * Navigation Bar
- * Online Event Booking System
+ * Online Event Booking System - includes/navbar.php
  */
 
+// Start session if not already started
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+
+//Include config.php to load LoginUser() and session variables
 require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/functions.php'; 
+
+
 
 // Get current page for active link highlighting
 $current_page = basename($_SERVER['PHP_SELF']);
@@ -13,7 +21,7 @@ $current_dir = basename(dirname($_SERVER['PHP_SELF']));
 
 // Get cart count for logged in users
 $cart_count = 0;
-if (isLoggedIn()) {
+if (isset($_SESSION['user_id'])) {
     $cart_items = getCartItems($_SESSION['user_id']);
     $cart_count = array_sum(array_column($cart_items, 'quantity'));
 }
@@ -26,14 +34,28 @@ function isActivePage($page) {
     }
     return $current_page == $page || $current_dir == $page;
 }
+
+// Helper function to get base URL
+function getBaseUrl() {
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'];
+    $path = dirname($_SERVER['SCRIPT_NAME']);
+    
+    // Remove /includes if present in path (since navbar is in includes folder)
+    $path = str_replace('/includes', '', $path);
+    
+    return $protocol . '://' . $host . $path;
+}
+
+$base_url = getBaseUrl();
 ?>
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow">
     <div class="container">
         <!-- Brand -->
-        <a class="navbar-brand fw-bold" href="<?php echo SITE_URL; ?>/index.php">
+        <a class="navbar-brand fw-bold" href="<?php echo $base_url; ?>/index.php">
             <i class="fas fa-calendar-alt me-2"></i>
-            <?php echo SITE_NAME; ?>
+            EventBooker
         </a>
         
         <!-- Mobile Toggle -->
@@ -47,25 +69,25 @@ function isActivePage($page) {
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
                     <a class="nav-link <?php echo isActivePage(['index.php', '']) ? 'active' : ''; ?>" 
-                       href="<?php echo SITE_URL; ?>/index.php">
+                       href="<?php echo $base_url; ?>/index.php">
                         <i class="fas fa-home me-1"></i>Home
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo isActivePage(['events.php', 'events']) ? 'active' : ''; ?>" 
-                       href="<?php echo SITE_URL; ?>/events/events.php">
+                       href="<?php echo $base_url; ?>/events/events.php">
                         <i class="fas fa-calendar me-1"></i>Events
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo isActivePage(['about.php', 'about']) ? 'active' : ''; ?>" 
-                       href="<?php echo SITE_URL; ?>/about.php">
+                       href="<?php echo $base_url; ?>/about.php">
                         <i class="fas fa-info-circle me-1"></i>About
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link <?php echo isActivePage(['contact.php', 'contact']) ? 'active' : ''; ?>" 
-                       href="<?php echo SITE_URL; ?>/contact.php">
+                       href="<?php echo $base_url; ?>/contact.php">
                         <i class="fas fa-envelope me-1"></i>Contact
                     </a>
                 </li>
@@ -82,7 +104,7 @@ function isActivePage($page) {
                         ?>
                         <li>
                             <a class="dropdown-item" 
-                               href="<?php echo SITE_URL; ?>/events/events.php?category=<?php echo urlencode($category['id']); ?>">
+                               href="<?php echo $base_url; ?>/events/events.php?category=<?php echo urlencode($category['id']); ?>">
                                 <i class="fas fa-tag me-2"></i>
                                 <?php echo htmlspecialchars($category['name']); ?>
                             </a>
@@ -95,7 +117,7 @@ function isActivePage($page) {
                         <?php endif; ?>
                         <li><hr class="dropdown-divider"></li>
                         <li>
-                            <a class="dropdown-item" href="<?php echo SITE_URL; ?>/events/events.php">
+                            <a class="dropdown-item" href="<?php echo $base_url; ?>/events/events.php">
                                 <i class="fas fa-eye me-2"></i>View All Events
                             </a>
                         </li>
@@ -104,7 +126,7 @@ function isActivePage($page) {
             </ul>
             
             <!-- Search Form -->
-            <form class="d-flex me-3" action="<?php echo SITE_URL; ?>/events/search.php" method="GET" role="search">
+            <form class="d-flex me-3" action="<?php echo $base_url; ?>/events/search.php" method="GET" role="search">
                 <div class="input-group">
                     <input class="form-control" type="search" name="q" placeholder="Search events..." 
                            aria-label="Search events"
@@ -117,11 +139,11 @@ function isActivePage($page) {
             
             <!-- User Menu -->
             <ul class="navbar-nav">
-                <?php if (isLoggedIn()): ?>
+                <?php if (isset($_SESSION['user_id'])): ?>
                     <!-- Cart -->
                     <li class="nav-item">
                         <a class="nav-link position-relative <?php echo isActivePage(['cart.php', 'booking']) ? 'active' : ''; ?>" 
-                           href="<?php echo SITE_URL; ?>/booking/cart.php" title="Shopping Cart">
+                           href="<?php echo $base_url; ?>/booking/cart.php" title="Shopping Cart">
                             <i class="fas fa-shopping-cart"></i>
                             <?php if ($cart_count > 0): ?>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
@@ -132,57 +154,36 @@ function isActivePage($page) {
                         </a>
                     </li>
                     
-                    <!-- Notifications (Optional) -->
-                    <li class="nav-item">
-                        <a class="nav-link position-relative" href="<?php echo SITE_URL; ?>/notifications.php" title="Notifications">
-                            <i class="fas fa-bell"></i>
-                            <!-- Add notification count if needed -->
-                        </a>
-                    </li>
-                    
                     <!-- User Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" 
                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user-circle me-2"></i>
                             <span class="d-none d-md-inline">
-                                <?php echo htmlspecialchars(getCurrentUser()['first_name']); ?>
+                                <?php echo htmlspecialchars($_SESSION['first_name'] ?? 'User'); ?>
                             </span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li>
                                 <h6 class="dropdown-header">
                                     <i class="fas fa-user me-2"></i>
-                                    <?php 
-                                    $user = getCurrentUser();
-                                    echo htmlspecialchars($user['first_name'] . ' ' . $user['last_name']); 
-                                    ?>
+                                    <?php echo htmlspecialchars(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? '')); ?>
                                 </h6>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="<?php echo SITE_URL; ?>/user/profile.php">
+                                <a class="dropdown-item" href="<?php echo $base_url; ?>/auth/profile.php">
                                     <i class="fas fa-user-edit me-2"></i>My Profile
                                 </a>
                             </li>
                             <li>
-                                <a class="dropdown-item" href="<?php echo SITE_URL; ?>/user/dashboard.php">
-                                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?php echo SITE_URL; ?>/booking/my-bookings.php">
+                                <a class="dropdown-item" href="<?php echo $base_url; ?>/booking/booking-history.php">
                                     <i class="fas fa-history me-2"></i>My Bookings
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="<?php echo SITE_URL; ?>/user/settings.php">
-                                    <i class="fas fa-cog me-2"></i>Settings
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item text-danger" href="<?php echo SITE_URL; ?>/auth/logout.php" 
+                                <a class="dropdown-item text-danger" href="<?php echo $base_url; ?>/auth/logout.php" 
                                    onclick="return confirm('Are you sure you want to logout?')">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                                 </a>
@@ -193,14 +194,14 @@ function isActivePage($page) {
                     <!-- Login/Register for non-logged in users -->
                     <li class="nav-item">
                         <a class="nav-link <?php echo isActivePage('login.php') ? 'active' : ''; ?>" 
-                           href="<?php echo SITE_URL; ?>/auth/login.php">
+                           href="<?php echo $base_url; ?>/auth/login.php">
                             <i class="fas fa-sign-in-alt me-1"></i>
                             <span class="d-none d-md-inline">Login</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link <?php echo isActivePage('register.php') ? 'active' : ''; ?>" 
-                           href="<?php echo SITE_URL; ?>/auth/register.php">
+                           href="<?php echo $base_url; ?>/auth/register.php">
                             <i class="fas fa-user-plus me-1"></i>
                             <span class="d-none d-md-inline">Register</span>
                         </a>
